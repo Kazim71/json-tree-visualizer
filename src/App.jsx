@@ -26,6 +26,8 @@ function App() {
   const [error, setError] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
 
   useEffect(() => {
     localStorage.setItem('darkMode', darkMode.toString());
@@ -46,6 +48,12 @@ function App() {
     
     if (result.success) {
       const { nodes: treeNodes, edges: treeEdges } = generateTreeNodes(result.data);
+      
+      // Save to history before updating
+      const newState = { nodes: treeNodes, edges: treeEdges, jsonInput };
+      setHistory(prev => [...prev.slice(0, currentHistoryIndex + 1), newState]);
+      setCurrentHistoryIndex(prev => prev + 1);
+      
       setNodes(treeNodes);
       setEdges(treeEdges);
       setError('');
@@ -64,6 +72,43 @@ function App() {
     setEdges([]);
     setError('');
     setSearchResults([]);
+    setHistory([]);
+    setCurrentHistoryIndex(-1);
+  };
+
+  const handleReset = () => {
+    if (history.length > 0) {
+      const firstState = history[0];
+      setNodes(firstState.nodes);
+      setEdges(firstState.edges);
+      setCurrentHistoryIndex(0);
+      setError('');
+      setSearchResults([]);
+    }
+  };
+
+  const handleUndo = () => {
+    if (currentHistoryIndex > 0) {
+      const prevIndex = currentHistoryIndex - 1;
+      const prevState = history[prevIndex];
+      setNodes(prevState.nodes);
+      setEdges(prevState.edges);
+      setCurrentHistoryIndex(prevIndex);
+      setError('');
+      setSearchResults([]);
+    }
+  };
+
+  const handleRedo = () => {
+    if (currentHistoryIndex < history.length - 1) {
+      const nextIndex = currentHistoryIndex + 1;
+      const nextState = history[nextIndex];
+      setNodes(nextState.nodes);
+      setEdges(nextState.edges);
+      setCurrentHistoryIndex(nextIndex);
+      setError('');
+      setSearchResults([]);
+    }
   };
 
   const handleSearch = (query) => {
@@ -115,6 +160,12 @@ function App() {
     // Re-generate tree from updated JSON data
     if (updatedData) {
       const { nodes: treeNodes, edges: treeEdges } = generateTreeNodes(updatedData);
+      
+      // Save to history
+      const newState = { nodes: treeNodes, edges: treeEdges, jsonInput: JSON.stringify(updatedData, null, 2) };
+      setHistory(prev => [...prev.slice(0, currentHistoryIndex + 1), newState]);
+      setCurrentHistoryIndex(prev => prev + 1);
+      
       setNodes(treeNodes);
       setEdges(treeEdges);
     }
@@ -171,8 +222,14 @@ function App() {
               <JSONInput 
                 onVisualize={handleVisualize}
                 onClear={handleClear}
+                onReset={handleReset}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
                 error={error}
                 isLoading={isLoading}
+                canUndo={currentHistoryIndex > 0}
+                canRedo={currentHistoryIndex < history.length - 1}
+                canReset={history.length > 0}
               />
               
               <AnimatePresence>

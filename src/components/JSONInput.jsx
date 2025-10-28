@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { FileText, Play, Trash2, Loader2, Sparkles, Code, Zap, Upload, User, ShoppingCart, Globe, Settings, Smartphone, TrendingUp, Radio, DollarSign } from 'lucide-react';
+import { FileText, Play, Trash2, Loader2, Sparkles, Code, Zap, Upload, User, ShoppingCart, Globe, Settings, Smartphone, TrendingUp, Radio, DollarSign, RotateCcw, Undo2, Redo2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -204,7 +204,7 @@ const SAMPLE_TEMPLATES = [
   }
 ];
 
-const JSONInput = ({ onVisualize, onClear, error, isLoading }) => {
+const JSONInput = ({ onVisualize, onClear, onReset, onUndo, onRedo, error, isLoading, canUndo, canRedo, canReset }) => {
   const [input, setInput] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
   const fileInputRef = useRef(null);
@@ -224,6 +224,21 @@ const JSONInput = ({ onVisualize, onClear, error, isLoading }) => {
     setInput('');
     onClear();
     toast.success('Input cleared!');
+  };
+
+  const handleReset = () => {
+    onReset();
+    toast.success('Reset to first version!');
+  };
+
+  const handleUndo = () => {
+    onUndo();
+    toast.success('Undone!');
+  };
+
+  const handleRedo = () => {
+    onRedo();
+    toast.success('Redone!');
   };
 
   const loadTemplate = (template) => {
@@ -403,62 +418,101 @@ const JSONInput = ({ onVisualize, onClear, error, isLoading }) => {
       </AnimatePresence>
       
       {/* Action Buttons */}
-      <div className="grid grid-cols-1 gap-3 mt-4 sm:grid-cols-3">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleVisualize}
-          disabled={isLoading}
-          className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-        >
-          <AnimatePresence mode="wait">
-            {isLoading ? (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0, rotate: 0 }}
-                animate={{ opacity: 1, rotate: 360 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3, rotate: { duration: 1, repeat: Infinity, ease: "linear" } }}
-              >
-                <Loader2 className="w-4 h-4" />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="play"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0 }}
-                className="flex items-center gap-2"
-              >
-                <Play className="w-4 h-4" />
-                <span className="hidden xs:inline sm:hidden md:inline">Generate Tree</span>
-                <span className="xs:hidden sm:inline md:hidden">Generate</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
-        
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isLoading}
-          className="btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-        >
-          <Upload className="w-4 h-4" />
-          <span>Import</span>
-        </motion.button>
-        
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleClear}
-          disabled={isLoading}
-          className="btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-        >
-          <Trash2 className="w-4 h-4" />
-          <span>Clear</span>
-        </motion.button>
+      <div className="space-y-3">
+        {/* Primary Actions */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleVisualize}
+            disabled={isLoading}
+            className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+          >
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0, rotate: 0 }}
+                  animate={{ opacity: 1, rotate: 360 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, rotate: { duration: 1, repeat: Infinity, ease: "linear" } }}
+                >
+                  <Loader2 className="w-4 h-4" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="play"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0 }}
+                  className="flex items-center gap-2"
+                >
+                  <Play className="w-4 h-4" />
+                  <span className="hidden xs:inline sm:hidden md:inline">Generate Tree</span>
+                  <span className="xs:hidden sm:inline md:hidden">Generate</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.button>
+          
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isLoading}
+            className="btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+          >
+            <Upload className="w-4 h-4" />
+            <span>Import</span>
+          </motion.button>
+          
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleClear}
+            disabled={isLoading}
+            className="btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Clear</span>
+          </motion.button>
+        </div>
+
+        {/* History Controls */}
+        <div className="grid grid-cols-3 gap-2">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleUndo}
+            disabled={!canUndo || isLoading}
+            className="btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed min-h-[40px] text-sm"
+          >
+            <Undo2 className="w-4 h-4" />
+            <span>Undo</span>
+          </motion.button>
+          
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleReset}
+            disabled={!canReset || isLoading}
+            className="btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed min-h-[40px] text-sm"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Reset</span>
+          </motion.button>
+          
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleRedo}
+            disabled={!canRedo || isLoading}
+            className="btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed min-h-[40px] text-sm"
+          >
+            <Redo2 className="w-4 h-4" />
+            <span>Redo</span>
+          </motion.button>
+        </div>
       </div>
 
       {/* Hidden File Input */}
