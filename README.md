@@ -196,7 +196,7 @@ npm run preview  # Test production build locally
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [React Flow](https://reactflow.dev/) for the excellent graph library
 - [Framer Motion](https://www.framer.com/motion/) for smooth animations

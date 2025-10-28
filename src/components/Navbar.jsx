@@ -323,7 +323,7 @@ const Navbar = ({
 
               {/* GitHub */}
               <a
-                href="https://github.com"
+                href="https://github.com/Kazim71/json-tree-visualizer"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 transition-all duration-200"
