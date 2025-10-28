@@ -14,10 +14,12 @@ import { parseJSON, generateTreeNodes, searchInTree } from './utils/jsonParser';
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('darkMode') === 'true' || 
-             window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const stored = localStorage.getItem('darkMode');
+      if (stored !== null) {
+        return stored === 'true';
+      }
     }
-    return false;
+    return false; // Default to light mode
   });
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);

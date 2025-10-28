@@ -17,15 +17,9 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
       >
         <div className="container px-4 mx-auto max-w-7xl">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
+            {/* Logo and Title (icon/logo removed) */}
             <div className="flex items-center gap-3">
-              <motion.div
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.5 }}
-                className="p-2 shadow-lg bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl"
-              >
-                <Database className="w-6 h-6 text-white" />
-              </motion.div>
+              {/* Removed: Logo Icon */}
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-gradient">JSON Tree Visualizer</h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Interactive JSON Explorer</p>
