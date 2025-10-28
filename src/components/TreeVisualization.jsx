@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -10,7 +10,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import CustomNode from './CustomNode';
 import EditableNode from './EditableNode';
-import { ZoomIn, ZoomOut, Maximize, Download, RotateCcw, Eye, EyeOff, Layers, Edit3, Save, X } from 'lucide-react';
+import { Download, Eye, EyeOff, Layers, Edit3, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
@@ -20,145 +20,140 @@ const nodeTypes = {
   editable: EditableNode,
 };
 
-const TreeVisualization = ({ nodes: initialNodes, edges: initialEdges, searchResults, isLoading, isEditMode: externalEditMode, toggleEditMode: externalToggleEditMode, onTreeUpdate }) => {
+const TreeVisualization = ({ nodes: initialNodes, edges: initialEdges, searchResults, isLoading, onTreeUpdate }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [showMiniMap, setShowMiniMap] = useState(true);
-  const [showBackground, setShowBackground] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-
-  // Sync with external edit mode
-  useEffect(() => {
-    if (externalEditMode !== undefined) {
-      setIsEditMode(externalEditMode);
-    }
-  }, [externalEditMode]);
-
-  // Listen for navbar events
-  useEffect(() => {
-    const handleExportTree = () => downloadImage();
-    const handleZoomIn = () => zoomIn();
-    const handleZoomOut = () => zoomOut();
-    const handleResetView = () => resetView();
-
-    window.addEventListener('exportTree', handleExportTree);
-    window.addEventListener('zoomIn', handleZoomIn);
-    window.addEventListener('zoomOut', handleZoomOut);
-    window.addEventListener('resetView', handleResetView);
-
-    return () => {
-      window.removeEventListener('exportTree', handleExportTree);
-      window.removeEventListener('zoomIn', handleZoomIn);
-      window.removeEventListener('zoomOut', handleZoomOut);
-      window.removeEventListener('resetView', handleResetView);
-    };
-  }, []);
-  const [originalNodes, setOriginalNodes] = useState([]);
-  const [originalEdges, setOriginalEdges] = useState([]);
-  const { fitView, zoomIn, zoomOut, getViewport } = useReactFlow();
-
-
-
-  const toggleEditMode = () => {
-    if (externalToggleEditMode) {
-      externalToggleEditMode();
-    } else {
-      if (!isEditMode) {
-        setOriginalNodes([...nodes]);
-        setOriginalEdges([...edges]);
-      }
-      setIsEditMode(!isEditMode);
-    }
-  };
-
-  const saveChanges = () => {
-    setIsEditMode(false);
-    if (onTreeUpdate) {
-      onTreeUpdate(nodes, edges);
-    }
-    toast.success('Changes saved!');
-  };
-
-  const cancelChanges = () => {
-    setNodes(originalNodes);
-    setEdges(originalEdges);
-    setIsEditMode(false);
-    toast.success('Changes cancelled');
-  };
-
-  const handleNodeEdit = (nodeId, newKey) => {
-    setNodes(nds => nds.map(node => 
-      node.id === nodeId 
-        ? { ...node, data: { ...node.data, key: newKey } }
-        : node
-    ));
-  };
-
-  const handleNodeDelete = (nodeId) => {
-    setNodes(nds => nds.filter(node => node.id !== nodeId));
-    setEdges(eds => eds.filter(edge => edge.source !== nodeId && edge.target !== nodeId));
-  };
-
-  const handleAddChild = (parentId) => {
-    const newNodeId = `node-${Date.now()}`;
-    const parentNode = nodes.find(n => n.id === parentId);
-    
-    if (parentNode) {
-      const newNode = {
-        id: newNodeId,
-        type: isEditMode ? 'editable' : 'custom',
-        position: { 
-          x: parentNode.position.x + 200, 
-          y: parentNode.position.y + 100 
-        },
-        data: {
-          key: 'newKey',
-          value: 'newValue',
-          type: 'primitive',
-          path: `${parentNode.data.path}.newKey`,
-          isRoot: false
-        }
-      };
-      
-      const newEdge = {
-        id: `edge-${parentId}-${newNodeId}`,
-        source: parentId,
-        target: newNodeId,
-        type: 'smoothstep',
-        style: { strokeWidth: 2, stroke: '#94a3b8' }
-      };
-      
-      setNodes(nds => [...nds, newNode]);
-      setEdges(eds => [...eds, newEdge]);
-    }
-  };
+  const [editMode, setEditMode] = useState(false);
+  const [originalData, setOriginalData] = useState(null);
+  const { fitView } = useReactFlow();
 
   useEffect(() => {
     if (initialNodes.length > 0) {
       // Add search highlighting to nodes
       const nodesWithHighlight = initialNodes.map(node => ({
         ...node,
-        type: isEditMode ? 'editable' : 'custom',
+        type: editMode ? 'editable' : 'custom',
         selected: searchResults.some(result => result.id === node.id),
         data: {
           ...node.data,
-          isHighlighted: searchResults.some(result => result.id === node.id)
+          isHighlighted: searchResults.some(result => result.id === node.id),
+          onUpdate: editMode ? handleNodeUpdate : undefined,
+          onDelete: editMode ? handleNodeDelete : undefined,
+          onAddChild: editMode ? handleAddChild : undefined,
         }
       }));
 
       setNodes(nodesWithHighlight);
       setEdges(initialEdges);
       
-      if (!isEditMode) {
-        setOriginalNodes(nodesWithHighlight);
-        setOriginalEdges(initialEdges);
+      // Store original data when entering edit mode
+      if (editMode && !originalData) {
+        setOriginalData({ nodes: initialNodes, edges: initialEdges });
       }
     } else {
       setNodes([]);
       setEdges([]);
     }
-  }, [initialNodes, initialEdges, searchResults, isEditMode, setNodes, setEdges]);
+  }, [initialNodes, initialEdges, searchResults, editMode, setNodes, setEdges]);
+
+  const handleNodeUpdate = (nodeId, newData) => {
+    setNodes(currentNodes => 
+      currentNodes.map(node => 
+        node.id === nodeId 
+          ? { 
+              ...node, 
+              data: { 
+                ...node.data, 
+                key: newData.key,
+                value: newData.value 
+              } 
+            }
+          : node
+      )
+    );
+  };
+
+  const handleNodeDelete = (nodeId) => {
+    setNodes(currentNodes => currentNodes.filter(node => node.id !== nodeId));
+    setEdges(currentEdges => currentEdges.filter(edge => 
+      edge.source !== nodeId && edge.target !== nodeId
+    ));
+  };
+
+  const handleAddChild = (parentId, childType) => {
+    const newNodeId = `${parentId}-child-${Date.now()}`;
+    const parentNode = nodes.find(node => node.id === parentId);
+    
+    if (parentNode) {
+      const newNode = {
+        id: newNodeId,
+        type: 'editable',
+        position: {
+          x: parentNode.position.x + Math.random() * 200 - 100,
+          y: parentNode.position.y + 150
+        },
+        data: {
+          key: `new_${childType}`,
+          value: childType === 'string' ? 'new value' : 
+                 childType === 'number' ? 0 : 
+                 childType === 'boolean' ? true : 
+                 childType === 'object' ? {} : [],
+          type: childType,
+          path: `${parentNode.data.path}.new_${childType}`,
+          onUpdate: handleNodeUpdate,
+          onDelete: handleNodeDelete,
+          onAddChild: handleAddChild,
+        }
+      };
+      
+      const newEdge = {
+        id: `${parentId}-${newNodeId}`,
+        source: parentId,
+        target: newNodeId,
+        type: 'smoothstep',
+        animated: false,
+        style: { strokeWidth: 2, stroke: '#94a3b8' }
+      };
+      
+      setNodes(currentNodes => [...currentNodes, newNode]);
+      setEdges(currentEdges => [...currentEdges, newEdge]);
+    }
+  };
+
+  const toggleEditMode = () => {
+    if (editMode) {
+      // Exiting edit mode - could save changes here
+      toast.success('Edit mode disabled');
+    } else {
+      // Entering edit mode
+      toast.success('Edit mode enabled! Click nodes to edit them.');
+    }
+    setEditMode(!editMode);
+  };
+
+  const saveChanges = () => {
+    if (onTreeUpdate) {
+      // Convert current nodes back to JSON structure
+      const updatedData = reconstructJSONFromNodes(nodes);
+      onTreeUpdate(updatedData);
+    }
+    setEditMode(false);
+    setOriginalData(null);
+    toast.success('Changes saved successfully!');
+  };
+
+  const reconstructJSONFromNodes = (nodeList) => {
+    // This is a simplified reconstruction - in a real app you'd want more sophisticated logic
+    const result = {};
+    nodeList.forEach(node => {
+      if (node.data.key && node.data.value !== undefined) {
+        result[node.data.key] = node.data.value;
+      }
+    });
+    return result;
+  };
 
   const downloadImage = async () => {
     setIsDownloading(true);
@@ -199,8 +194,7 @@ const TreeVisualization = ({ nodes: initialNodes, edges: initialEdges, searchRes
       link.click();
       
       toast.success('Image downloaded successfully!', { 
-        id: 'download',
-        icon: '📸'
+        id: 'download'
       });
     } catch (error) {
       console.error('Export error:', error);
@@ -209,38 +203,6 @@ const TreeVisualization = ({ nodes: initialNodes, edges: initialEdges, searchRes
       setIsDownloading(false);
     }
   };
-
-  const resetView = () => {
-    fitView({ duration: 800, padding: 0.1 });
-    toast.success('View reset!', { icon: '🎯' });
-  };
-
-  const controlButtons = [
-    {
-      icon: ZoomIn,
-      label: 'Zoom In',
-      action: () => zoomIn(),
-      shortcut: '+'
-    },
-    {
-      icon: ZoomOut,
-      label: 'Zoom Out', 
-      action: () => zoomOut(),
-      shortcut: '-'
-    },
-    {
-      icon: Maximize,
-      label: 'Fit View',
-      action: resetView,
-      shortcut: '0'
-    },
-    {
-      icon: RotateCcw,
-      label: 'Reset View',
-      action: resetView,
-      shortcut: 'R'
-    }
-  ];
 
   return (
     <motion.div 
@@ -254,109 +216,116 @@ const TreeVisualization = ({ nodes: initialNodes, edges: initialEdges, searchRes
       <div className="flex items-center justify-between p-6 border-b border-white/10 dark:border-gray-700/30">
         <div className="flex items-center gap-3">
           <motion.div
-            animate={{ rotate: isLoading ? 360 : 0 }}
-            transition={{ duration: 1, repeat: isLoading ? Infinity : 0, ease: "linear" }}
-            className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl shadow-lg"
+            animate={{ 
+              rotate: isLoading ? 360 : 0,
+              scale: isLoading ? [1, 1.1, 1] : 1
+            }}
+            whileHover={{ 
+              scale: 1.1, 
+              rotate: 180,
+              boxShadow: "0 0 20px rgba(168, 85, 247, 0.4)"
+            }}
+            transition={{ 
+              duration: isLoading ? 1 : 0.3, 
+              repeat: isLoading ? Infinity : 0, 
+              ease: "linear" 
+            }}
+            className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl shadow-lg cursor-pointer"
           >
             <Layers className="w-5 h-5 text-white" />
           </motion.div>
           <div>
-            <h3 className="font-bold text-gray-800 dark:text-white text-lg flex items-center gap-2">
-              Tree Visualization
-              {isEditMode && (
-                <span className="text-xs bg-yellow-500 text-white px-2 py-1 rounded-full">
-                  EDIT MODE
-                </span>
-              )}
-            </h3>
+            <h3 className="font-bold text-gray-800 dark:text-white text-lg">Tree Visualization</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {nodes.length} nodes • {isEditMode ? 'Click to edit, hover for controls' : 'Interactive & zoomable'}
+              {nodes.length} nodes • {editMode ? 'Edit Mode Active' : 'Interactive & zoomable'}
             </p>
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          {/* Edit Mode Controls */}
-          {isEditMode ? (
-            <div className="flex items-center gap-2 mr-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={saveChanges}
-                className="btn-primary text-sm py-2 px-3 flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                <span>Save</span>
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={cancelChanges}
-                className="btn-secondary text-sm py-2 px-3 flex items-center gap-2"
-              >
-                <X className="w-4 h-4" />
-                <span>Cancel</span>
-              </motion.button>
-            </div>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={toggleEditMode}
-              className="btn-secondary mr-3 flex items-center gap-2"
-              disabled={nodes.length === 0}
-            >
-              <Edit3 className="w-4 h-4" />
-              <span className="hidden sm:inline">Edit</span>
-            </motion.button>
-          )}
-          
+        <div className="flex items-center gap-3 mr-4">
           {/* View Controls */}
-          <div className="flex items-center gap-1 mr-3">
+          <div className="flex items-center gap-2">
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.1, y: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowMiniMap(!showMiniMap)}
-              className={`p-2 rounded-lg transition-all duration-200 ${
+              className={`p-2 rounded-xl transition-all duration-200 shadow-md ${
                 showMiniMap 
-                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
-                  : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-blue-200 dark:shadow-blue-800' 
+                  : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
               title="Toggle Minimap"
             >
-              {showMiniMap ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              <AnimatePresence mode="wait">
+                {showMiniMap ? (
+                  <motion.div
+                    key="eye"
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    exit={{ scale: 0, rotate: 180 }}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="eye-off"
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    exit={{ scale: 0, rotate: 180 }}
+                  >
+                    <EyeOff className="w-4 h-4" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.1, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={toggleEditMode}
+              className={`p-2 rounded-xl transition-all duration-200 shadow-md ${
+                editMode 
+                  ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 shadow-green-200 dark:shadow-green-800' 
+                  : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+              title={editMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
+            >
+              <Edit3 className="w-4 h-4" />
             </motion.button>
           </div>
-
-          {/* Control Buttons */}
-          {controlButtons.map((button, index) => (
-            <motion.button
-              key={button.label}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={button.action}
-              className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50 rounded-lg transition-all duration-200 group relative"
-              title={`${button.label} (${button.shortcut})`}
-            >
-              <button.icon className="w-4 h-4" />
-              
-              {/* Tooltip */}
-              <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                {button.label}
-              </div>
-            </motion.button>
-          ))}
+          
+          <AnimatePresence>
+            {editMode && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8, x: -20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.8, x: -20 }}
+                whileHover={{ 
+                  scale: 1.05, 
+                  y: -2,
+                  boxShadow: "0 8px 25px rgba(34, 197, 94, 0.25)"
+                }}
+                whileTap={{ scale: 0.95 }}
+                onClick={saveChanges}
+                className="btn-secondary bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600 flex items-center gap-2 shadow-lg"
+              >
+                <Save className="w-4 h-4" />
+                <span className="hidden sm:inline font-semibold">Save</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
           
           {/* Download Button */}
           <motion.button
-            whileHover={{ scale: 1.05, y: -2 }}
+            whileHover={{ 
+              scale: 1.05, 
+              y: -2,
+              boxShadow: "0 8px 25px rgba(0,0,0,0.15)"
+            }}
             whileTap={{ scale: 0.95 }}
             onClick={downloadImage}
             disabled={isDownloading}
-            className="btn-secondary ml-2 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             <AnimatePresence mode="wait">
               {isDownloading ? (
@@ -372,15 +341,16 @@ const TreeVisualization = ({ nodes: initialNodes, edges: initialEdges, searchRes
               ) : (
                 <motion.div
                   key="download"
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0 }}
+                  initial={{ opacity: 0, scale: 0, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0, y: -10 }}
+                  whileHover={{ y: -2 }}
                 >
                   <Download className="w-4 h-4" />
                 </motion.div>
               )}
             </AnimatePresence>
-            <span className="hidden sm:inline">Export</span>
+            <span className="hidden sm:inline font-semibold">Export</span>
           </motion.button>
         </div>
       </div>
@@ -388,16 +358,7 @@ const TreeVisualization = ({ nodes: initialNodes, edges: initialEdges, searchRes
       {/* React Flow */}
       <div className="flex-1 relative" style={{ height: '500px' }}>
         <ReactFlow
-          nodes={nodes.map(node => ({
-            ...node,
-            data: {
-              ...node.data,
-              isEditMode,
-              onNodeEdit: handleNodeEdit,
-              onNodeDelete: handleNodeDelete,
-              onAddChild: handleAddChild
-            }
-          }))}
+          nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
@@ -414,18 +375,16 @@ const TreeVisualization = ({ nodes: initialNodes, edges: initialEdges, searchRes
             animated: false,
             style: { strokeWidth: 2, stroke: '#94a3b8' }
           }}
-          nodesDraggable={isEditMode}
-          nodesConnectable={isEditMode}
+          nodesDraggable={true}
+          nodesConnectable={false}
           elementsSelectable={true}
         >
-          {showBackground && (
-            <Background 
-              color="#94a3b8" 
-              gap={20} 
-              size={1}
-              className="opacity-30 dark:opacity-20"
-            />
-          )}
+          <Background 
+            color="#94a3b8" 
+            gap={20} 
+            size={1}
+            className="opacity-30 dark:opacity-20"
+          />
           
           <Controls 
             className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/20 dark:border-gray-700/30 rounded-xl shadow-lg"

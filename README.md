@@ -11,7 +11,7 @@ A modern, interactive web application for visualizing JSON data as beautiful tre
 - **Dark/Light Mode**: Seamless theme switching with system preference detection
 - **Smooth Animations**: Powered by Framer Motion for delightful interactions
 - **Responsive Layout**: Optimized for desktop, tablet, and mobile devices
-- **Gradient Backgrounds**: Animated mesh gradients and floating elements
+- **Advanced Gradients**: Animated mesh gradients and floating elements
 
 ### 🌳 Interactive Tree Visualization
 - **React Flow Integration**: Smooth pan, zoom, and navigation
@@ -22,23 +22,22 @@ A modern, interactive web application for visualizing JSON data as beautiful tre
 
 ### 🔍 Advanced Search
 - **Real-time Search**: Find nodes by key names, values, or JSON paths
-- **Keyboard Shortcuts**: ⌘F/Ctrl+F to focus search instantly
 - **Search Highlighting**: Visual indicators for matching nodes
 - **Auto-centering**: Automatically centers view on search results
 - **Search Statistics**: Shows match count and navigation hints
 
 ### 📱 Enhanced Usability
-- **Template Library**: Quick-start with pre-built JSON templates
+- **Template Library**: 8 pre-built JSON templates for quick start
+- **File Import**: Import JSON files directly from your device
+- **Large File Support**: Handle JSON files up to 8000 characters
 - **Loading States**: Smooth loading animations and feedback
 - **Error Handling**: User-friendly error messages with suggestions
-- **Keyboard Navigation**: Full keyboard accessibility support
 - **Toast Notifications**: Contextual feedback for user actions
 
 ### 🛠️ Developer Features
 - **JSON Validation**: Real-time syntax checking and error reporting
 - **Export Options**: Download tree visualizations as PNG images
 - **Performance Optimized**: Efficient rendering for large JSON files
-- **TypeScript Ready**: Full type safety and IntelliSense support
 - **Modern Build**: Vite for fast development and optimized builds
 
 ## 🚀 Quick Start
@@ -50,7 +49,7 @@ A modern, interactive web application for visualizing JSON data as beautiful tre
 
 1. **Clone the repository**
 ```bash
-git clone <repository-url>
+git clone https://github.com/Kazim71/json-tree-visualizer.git
 cd json-tree-visualizer
 ```
 
@@ -76,28 +75,29 @@ npm run build
 ## 🎯 Usage Guide
 
 ### Basic Usage
-1. **Input JSON**: Paste your JSON data in the left panel
-2. **Generate Tree**: Click "Generate Tree" or use sample templates
-3. **Explore**: Pan, zoom, and click nodes to explore the structure
-4. **Search**: Use the search bar to find specific nodes
-5. **Export**: Download your visualization as an image
+1. **Input JSON**: Paste your JSON data in the left panel or use templates
+2. **Import Files**: Click "Import" to load JSON files from your device
+3. **Generate Tree**: Click "Generate Tree" to visualize the structure
+4. **Explore**: Pan, zoom, and click nodes to explore the structure
+5. **Search**: Use the search bar to find specific nodes
+6. **Export**: Download your visualization as a PNG image
 
-### Keyboard Shortcuts
-| Shortcut | Action |
-|----------|--------|
-| `⌘/Ctrl + F` | Focus search input |
-| `+` | Zoom in |
-| `-` | Zoom out |
-| `0` | Fit view |
-| `R` | Reset view |
-| `⌘/Ctrl + /` | Show keyboard shortcuts |
-| `Esc` | Close dialogs |
+### Template Library
+Choose from 8 professionally crafted templates:
+- **User Profile**: Complete user data with personal information
+- **E-commerce**: Product catalog with orders and inventory
+- **API Response**: REST API response with pagination
+- **Config File**: Application configuration settings
+- **Social Media**: Social media posts with engagement metrics
+- **Analytics**: Website analytics with traffic data
+- **IoT Device**: Sensor data with device status
+- **Financial**: Transaction data with account details
 
 ### Advanced Features
-- **Templates**: Use pre-built templates for common JSON structures
-- **Search Patterns**: Search by JSON path (e.g., `$.user.address.city`)
-- **Node Details**: Hover over nodes to see type information
-- **Responsive Controls**: Touch-friendly controls on mobile devices
+- **Hover Tooltips**: Hover over template cards to see descriptions
+- **Responsive Design**: Optimized for all screen sizes
+- **Theme Support**: Dark and light mode with smooth transitions
+- **Interactive Controls**: Minimap toggle and export functionality
 
 ## 🏗️ Project Structure
 
@@ -109,7 +109,8 @@ src/
 │   ├── SearchBar.jsx           # Advanced search functionality
 │   ├── TreeVisualization.jsx   # Main tree display component
 │   ├── EmptyState.jsx          # Welcome screen with features
-│   └── KeyboardShortcuts.jsx   # Accessibility shortcuts
+│   ├── Navbar.jsx              # Navigation and controls
+│   └── Footer.jsx              # Footer component
 ├── utils/
 │   └── jsonParser.js           # JSON parsing and tree generation
 ├── styles/
@@ -196,7 +197,7 @@ npm run preview  # Test production build locally
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
 - [React Flow](https://reactflow.dev/) for the excellent graph library
 - [Framer Motion](https://www.framer.com/motion/) for smooth animations

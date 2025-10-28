@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, X, Zap, Target } from 'lucide-react';
+import { Search, X, Zap, Target, Command } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const SearchBar = ({ onSearch, searchResults, totalNodes }) => {
@@ -46,7 +46,9 @@ const SearchBar = ({ onSearch, searchResults, totalNodes }) => {
         </motion.div>
         <div>
           <h3 className="font-bold text-gray-800 dark:text-white text-lg">Smart Search</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">⌘F to focus • Search paths & values</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <Command className="w-3 h-3" />F to focus • Search paths & values
+          </p>
         </div>
       </div>
       

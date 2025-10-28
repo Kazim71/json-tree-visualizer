@@ -1,25 +1,21 @@
 import { motion } from 'framer-motion';
-import { Database, Sparkles, Zap, ArrowRight } from 'lucide-react';
+import { Database, ArrowRight } from 'lucide-react';
 
 const EmptyState = ({ onLoadSample }) => {
   const features = [
     {
-      icon: '🌳',
       title: 'Interactive Trees',
       description: 'Navigate through nested JSON structures'
     },
     {
-      icon: '🔍',
       title: 'Smart Search',
       description: 'Find any key or value instantly'
     },
     {
-      icon: '📱',
       title: 'Responsive Design',
       description: 'Works perfectly on all devices'
     },
     {
-      icon: '🎨',
       title: 'Beautiful Visuals',
       description: 'Color-coded nodes and smooth animations'
     }
@@ -31,28 +27,20 @@ const EmptyState = ({ onLoadSample }) => {
       animate={{ opacity: 1, y: 0 }}
       className="glass-card min-h-[600px] flex items-center justify-center"
     >
-      <div className="text-center space-y-8 max-w-2xl mx-auto p-8">
+      <div className="max-w-2xl p-8 mx-auto space-y-8 text-center">
         {/* Main Icon */}
         <motion.div
           animate={{ 
-            rotate: [0, 5, -5, 0],
-            scale: [1, 1.05, 1]
+            scale: [1, 1.02, 1]
           }}
           transition={{ 
-            duration: 4,
+            duration: 3,
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="mx-auto w-32 h-32 bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl relative overflow-hidden"
+          className="flex items-center justify-center w-24 h-24 mx-auto shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl"
         >
-          <Database className="w-16 h-16 text-white z-10" />
-          
-          {/* Animated background */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-600/20"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          />
+          <Database className="w-12 h-12 text-white" />
         </motion.div>
 
         {/* Title and Description */}
@@ -70,7 +58,7 @@ const EmptyState = ({ onLoadSample }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-gray-600 dark:text-gray-400 text-lg max-w-md mx-auto leading-relaxed"
+            className="max-w-md mx-auto text-lg leading-relaxed text-gray-600 dark:text-gray-400"
           >
             Transform your JSON data into beautiful, interactive tree structures. 
             Explore nested objects and arrays with ease.
@@ -82,14 +70,13 @@ const EmptyState = ({ onLoadSample }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={onLoadSample}
-          className="btn-primary text-lg px-8 py-4 mx-auto flex items-center gap-3 group"
+          className="flex items-center gap-2 px-6 py-3 mx-auto text-base btn-primary"
         >
-          <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-          <span>Try Sample Data</span>
-          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          <span>Load Sample Data</span>
+          <ArrowRight className="w-4 h-4" />
         </motion.button>
 
         {/* Features Grid */}
@@ -97,7 +84,7 @@ const EmptyState = ({ onLoadSample }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12"
+          className="grid grid-cols-2 gap-4 mt-12 md:grid-cols-4"
         >
           {features.map((feature, index) => (
             <motion.div
@@ -105,13 +92,9 @@ const EmptyState = ({ onLoadSample }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 + index * 0.1 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-gray-700/30 text-center group hover:shadow-lg transition-all duration-300"
+              className="p-4 text-center border bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border-gray-200/50 dark:border-gray-700/30"
             >
-              <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">
-                {feature.icon}
-              </div>
-              <h3 className="font-semibold text-gray-800 dark:text-white text-sm mb-1">
+              <h3 className="mb-1 text-sm font-medium text-gray-800 dark:text-white">
                 {feature.title}
               </h3>
               <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -126,20 +109,13 @@ const EmptyState = ({ onLoadSample }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="flex items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-400 pt-8 border-t border-gray-200/50 dark:border-gray-700/50"
+          className="flex items-center justify-center gap-6 pt-8 text-sm text-gray-500 border-t dark:text-gray-400 border-gray-200/50 dark:border-gray-700/50"
         >
-          <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4" />
-            <span>Supports all JSON types</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>⌘F</span>
-            <span>Quick search</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>📸</span>
-            <span>Export as image</span>
-          </div>
+          <span>Supports all JSON types</span>
+          <span>•</span>
+          <span>Quick search</span>
+          <span>•</span>
+          <span>Export as image</span>
         </motion.div>
       </div>
     </motion.div>

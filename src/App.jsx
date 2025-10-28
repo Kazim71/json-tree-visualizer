@@ -7,7 +7,6 @@ import JSONInput from './components/JSONInput';
 import SearchBar from './components/SearchBar';
 import TreeVisualization from './components/TreeVisualization';
 import EmptyState from './components/EmptyState';
-import KeyboardShortcuts from './components/KeyboardShortcuts';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { parseJSON, generateTreeNodes, searchInTree } from './utils/jsonParser';
@@ -25,9 +24,6 @@ function App() {
   const [error, setError] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [history, setHistory] = useState([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
 
   useEffect(() => {
     localStorage.setItem('darkMode', darkMode.toString());
@@ -113,63 +109,13 @@ function App() {
     handleVisualize(JSON.stringify(sampleData, null, 2));
   };
 
-  const handleTreeUpdate = (updatedNodes, updatedEdges) => {
-    setNodes(updatedNodes);
-    setEdges(updatedEdges);
-  };
-
-  const toggleEditMode = () => {
-    setIsEditMode(!isEditMode);
-  };
-
-  const handleExport = () => {
-    // This will be handled by TreeVisualization component
-    const event = new CustomEvent('exportTree');
-    window.dispatchEvent(event);
-  };
-
-  const handleImport = (jsonData) => {
-    handleVisualize(jsonData);
-  };
-
-  const handleZoomIn = () => {
-    const event = new CustomEvent('zoomIn');
-    window.dispatchEvent(event);
-  };
-
-  const handleZoomOut = () => {
-    const event = new CustomEvent('zoomOut');
-    window.dispatchEvent(event);
-  };
-
-  const handleReset = () => {
-    const event = new CustomEvent('resetView');
-    window.dispatchEvent(event);
-  };
-
-  const handleUndo = () => {
-    if (historyIndex > 0) {
-      const prevState = history[historyIndex - 1];
-      setNodes(prevState.nodes);
-      setEdges(prevState.edges);
-      setHistoryIndex(historyIndex - 1);
+  const handleTreeUpdate = (updatedData) => {
+    // Re-generate tree from updated JSON data
+    if (updatedData) {
+      const { nodes: treeNodes, edges: treeEdges } = generateTreeNodes(updatedData);
+      setNodes(treeNodes);
+      setEdges(treeEdges);
     }
-  };
-
-  const handleRedo = () => {
-    if (historyIndex < history.length - 1) {
-      const nextState = history[historyIndex + 1];
-      setNodes(nextState.nodes);
-      setEdges(nextState.edges);
-      setHistoryIndex(historyIndex + 1);
-    }
-  };
-
-  const addToHistory = (nodes, edges) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push({ nodes: [...nodes], edges: [...edges] });
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
   };
 
   return (
@@ -207,19 +153,6 @@ function App() {
         <Navbar 
           darkMode={darkMode} 
           toggleDarkMode={toggleDarkMode}
-          isEditMode={isEditMode}
-          toggleEditMode={toggleEditMode}
-          onSearch={handleSearch}
-          searchResults={searchResults}
-          onExport={handleExport}
-          onImport={handleImport}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          onReset={handleReset}
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          canUndo={historyIndex > 0}
-          canRedo={historyIndex < history.length - 1}
         />
         
         <main className="flex-1">
@@ -264,8 +197,25 @@ function App() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="xl:col-span-8"
+              className="xl:col-span-8 space-y-6"
             >
+              <AnimatePresence>
+                {nodes.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="hidden lg:block"
+                  >
+                    <SearchBar 
+                      onSearch={handleSearch}
+                      searchResults={searchResults}
+                      totalNodes={nodes.length}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <AnimatePresence mode="wait">
                 {nodes.length > 0 ? (
                   <motion.div
@@ -281,8 +231,6 @@ function App() {
                         edges={edges}
                         searchResults={searchResults}
                         isLoading={isLoading}
-                        isEditMode={isEditMode}
-                        toggleEditMode={toggleEditMode}
                         onTreeUpdate={handleTreeUpdate}
                       />
                     </ReactFlowProvider>
@@ -313,8 +261,6 @@ function App() {
           },
         }}
       />
-      
-      <KeyboardShortcuts />
     </div>
   );
 }
