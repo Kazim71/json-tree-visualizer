@@ -8,7 +8,7 @@ A modern, interactive web application for visualizing JSON data as beautiful tre
 
 ### 🎨 Modern UI/UX
 - **Glassmorphism Design**: Beautiful glass-like cards with backdrop blur effects
-- **Dark/Light Mode**: Seamless theme switching with system preference detection
+- **Dark/Light Mode**: Seamless theme switching with light mode as default
 - **Smooth Animations**: Powered by Framer Motion for delightful interactions
 - **Responsive Layout**: Optimized for desktop, tablet, and mobile devices
 - **Advanced Gradients**: Animated mesh gradients and floating elements
